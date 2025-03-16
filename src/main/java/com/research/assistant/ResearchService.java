@@ -1,11 +1,28 @@
 package com.research.assistant;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Map;
 
 @Service
+
 public class ResearchService {
+    @Value("${gemini.api.url}")
+    private String geminiApiUrl;
+
+    @Value("${gemini.api.key}")
+    private String geminiApiKey;
+
+    private final WebClient webClient;
+    private final ObjectMapper objectMapper;
+
+    public ResearchService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
+        this.webClient = webClientBuilder.build();
+        this.objectMapper = objectMapper;
+    }
 
     public String processContent(ResearchRequest request){
         // Build the prompt
@@ -20,12 +37,38 @@ public class ResearchService {
                 }
         );
 
+        String response = webClient.post()
+                .uri(geminiApiUrl + geminiApiKey)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
         // parse the response
+
 
 
         // return response
 
-        return request.getContent();
+        return extractTextFromResponse(response);
+    }
+
+    private String extractTextFromResponse(String response){
+        try {
+            GeminiResponse geminiResponse = objectMapper.readValue(response, GeminiResponse.class);
+            if(geminiResponse.getCandidates() != null && geminiResponse.getCandidates().size() > 0){
+                GeminiResponse.Candidate firstCandidate = geminiResponse.getCandidates().getFirst();
+                if(firstCandidate.getContent() != null &&
+                        firstCandidate.getContent().getParts() != null &&
+                        !firstCandidate.getContent().getParts().isEmpty()
+                ){
+                    return firstCandidate.getContent().getParts().getFirst().getText();
+                }
+            }
+        } catch (Exception e){
+            return "Error Parsing: "
+                    + e.getMessage();
+        }
     }
 
     private String buildPrompt(ResearchRequest request){
