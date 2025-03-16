@@ -56,19 +56,21 @@ public class ResearchService {
     private String extractTextFromResponse(String response){
         try {
             GeminiResponse geminiResponse = objectMapper.readValue(response, GeminiResponse.class);
-            if(geminiResponse.getCandidates() != null && geminiResponse.getCandidates().size() > 0){
-                GeminiResponse.Candidate firstCandidate = geminiResponse.getCandidates().getFirst();
+            if(geminiResponse.getCandidates() != null && !geminiResponse.getCandidates().isEmpty()){
+                GeminiResponse.Candidate firstCandidate = geminiResponse.getCandidates().get(0);
                 if(firstCandidate.getContent() != null &&
                         firstCandidate.getContent().getParts() != null &&
                         !firstCandidate.getContent().getParts().isEmpty()
                 ){
-                    return firstCandidate.getContent().getParts().getFirst().getText();
+                    return firstCandidate.getContent().getParts().get(0).getText();
                 }
             }
         } catch (Exception e){
             return "Error Parsing: "
                     + e.getMessage();
         }
+
+        return "no content found here";
     }
 
     private String buildPrompt(ResearchRequest request){
