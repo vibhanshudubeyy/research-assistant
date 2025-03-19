@@ -8,7 +8,7 @@
 		<version>3.4.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.research</groupId>
+	<groupId>com.backend.research</groupId>
 	<artifactId>research-assistant</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>research-assistant</name>
